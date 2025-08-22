@@ -1,46 +1,121 @@
 // Tab switching functionality
 function showSection(sectionId) {
-    // Hide all sections
-    const sections = document.querySelectorAll('.section');
-    sections.forEach(section => {
-        section.classList.remove('active');
-    });
-    
-    // Remove active class from all nav buttons
-    const navButtons = document.querySelectorAll('.nav-btn');
-    navButtons.forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Show selected section
-    const selectedSection = document.getElementById(sectionId);
-    if (selectedSection) {
-        selectedSection.classList.add('active');
-    }
-    
-    // Add active class to clicked button
-    const clickedButton = event.target;
-    if (clickedButton.classList.contains('nav-btn')) {
-        clickedButton.classList.add('active');
-    }
+	// Hide all sections
+	const sections = document.querySelectorAll('.section');
+	sections.forEach(function(section) {
+		section.classList.remove('active');
+	});
+
+	// Remove active class from all nav buttons
+	const navButtons = document.querySelectorAll('.nav-btn');
+	navButtons.forEach(function(btn) {
+		btn.classList.remove('active');
+	});
+
+	// Show selected section
+	const selectedSection = document.getElementById(sectionId);
+	if (selectedSection) {
+		selectedSection.classList.add('active');
+	}
+
+	// Determine which nav button to activate
+	let clickedButton = null;
+	var activeEl = document.activeElement;
+	if (activeEl && activeEl.classList && activeEl.classList.contains('nav-btn')) {
+		clickedButton = activeEl;
+	} else {
+		// Fallback by order: [0] -> terms, [1] -> privacy
+		const buttonsArray = Array.prototype.slice.call(navButtons);
+		if (sectionId === 'terms' && buttonsArray[0]) {
+			clickedButton = buttonsArray[0];
+		}
+		if (sectionId === 'privacy' && buttonsArray[1]) {
+			clickedButton = buttonsArray[1];
+		}
+	}
+	if (clickedButton) {
+		clickedButton.classList.add('active');
+	}
+
+	// Update URL when user clicks a nav button
+	if (activeEl && activeEl.classList && activeEl.classList.contains('nav-btn') && window.history && window.history.pushState) {
+		const newUrl = buildUrlForSection(sectionId);
+		window.history.pushState({ sectionId: sectionId }, '', newUrl);
+	}
 }
 
-// Initialize the page with Terms of Service active
+// Build a URL for the given section, respecting GitHub Pages base path
+function buildUrlForSection(sectionId) {
+	const segments = window.location.pathname.split('/').filter(function(part) { return part.length > 0; });
+	let baseSegments = segments.slice();
+
+	const last = baseSegments[baseSegments.length - 1];
+	if (last === 'privacy' || last === 'terms' || last === 'index.html') {
+		baseSegments = baseSegments.slice(0, -1);
+	}
+
+	const base = '/' + baseSegments.join('/');
+	const basePrefix = (base === '/' ? '' : base);
+
+	if (sectionId === 'privacy') {
+		return basePrefix + '/privacy';
+	}
+	// Default to root for terms
+	return basePrefix + '/';
+}
+
+// Decide which section to show based on the current path
+function getSectionFromPath(pathname) {
+	const parts = pathname.split('/').filter(function(part) { return part.length > 0; });
+	const last = parts[parts.length - 1] || '';
+	if (last.toLowerCase() === 'privacy') {
+		return 'privacy';
+	}
+	// Treat anything else as terms (root or /terms)
+	return 'terms';
+}
+
+function applyRoute(pathname) {
+	const sectionId = getSectionFromPath(pathname);
+	showSection(sectionId);
+}
+
+// Initialize routing and enhance UX
 document.addEventListener('DOMContentLoaded', function() {
-    // Set Terms of Service as default active section
-    showSection('terms');
-    
-    // Add smooth scrolling for better UX
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-}); 
+	// Support GitHub Pages SPA redirect: if ?p=/privacy is present, rewrite URL and apply route
+	var params = new URLSearchParams(window.location.search);
+	var redirectPath = params.get('p');
+	if (redirectPath) {
+		try {
+			var decoded = decodeURIComponent(redirectPath);
+			// Replace the URL to the intended path without reloading
+			if (window.history && window.history.replaceState) {
+				window.history.replaceState({}, '', decoded);
+			}
+			applyRoute(decoded);
+		} catch (e) {
+			applyRoute(window.location.pathname);
+		}
+	} else {
+		applyRoute(window.location.pathname);
+	}
+
+	// Handle browser navigation
+	window.addEventListener('popstate', function() {
+		applyRoute(window.location.pathname);
+	});
+
+	// Add smooth scrolling for better UX
+	document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+		anchor.addEventListener('click', function(e) {
+			e.preventDefault();
+			var target = document.querySelector(this.getAttribute('href'));
+			if (target) {
+				target.scrollIntoView({
+					behavior: 'smooth',
+					block: 'start'
+				});
+			}
+		});
+	});
+});

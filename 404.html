@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting…</title>
+    <script>
+        (function() {
+            var l = window.location;
+
+            // Compute repo base for GitHub Project Pages (first path segment)
+            var segments = l.pathname.split('/').filter(function(p){ return p.length > 0; });
+            var base = '';
+            if (segments.length > 0) {
+                base = '/' + segments[0];
+            }
+
+            // Path within app (remove base if present)
+            var pathWithinApp = base ? l.pathname.substring(base.length) : l.pathname;
+
+            // Redirect to index with the intended path preserved in a query param
+            var newUrl = (base || '') + '/?p=' + encodeURIComponent(pathWithinApp + l.search + l.hash);
+            l.replace(newUrl);
+        })();
+    </script>
+    <style>
+        html, body { height: 100%; }
+        body { display: flex; align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #333; }
+    </style>
+    
+</head>
+<body>
+    Redirecting…
+    
+</body>
+<!-- This file enables deep-linking on GitHub Pages for the SPA. -->
+<!-- Unknown routes are rewritten to /?p=/intended/path and then restored by script.js. -->
+</html>
+
+
