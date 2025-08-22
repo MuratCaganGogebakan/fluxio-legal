@@ -46,22 +46,11 @@ function showSection(sectionId) {
 
 // Build a URL for the given section, respecting GitHub Pages base path
 function buildUrlForSection(sectionId) {
-	const segments = window.location.pathname.split('/').filter(function(part) { return part.length > 0; });
-	let baseSegments = segments.slice();
-
-	const last = baseSegments[baseSegments.length - 1];
-	if (last === 'privacy' || last === 'terms' || last === 'index.html') {
-		baseSegments = baseSegments.slice(0, -1);
-	}
-
-	const base = '/' + baseSegments.join('/');
-	const basePrefix = (base === '/' ? '' : base);
-
+	// Use relative links so it works on both user and project pages
 	if (sectionId === 'privacy') {
-		return basePrefix + '/privacy';
+		return './privacy';
 	}
-	// Default to root for terms
-	return basePrefix + '/';
+	return './';
 }
 
 // Decide which section to show based on the current path

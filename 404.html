@@ -7,20 +7,9 @@
     <script>
         (function() {
             var l = window.location;
-
-            // Compute repo base for GitHub Project Pages (first path segment)
-            var segments = l.pathname.split('/').filter(function(p){ return p.length > 0; });
-            var base = '';
-            if (segments.length > 0) {
-                base = '/' + segments[0];
-            }
-
-            // Path within app (remove base if present)
-            var pathWithinApp = base ? l.pathname.substring(base.length) : l.pathname;
-
-            // Redirect to index with the intended path preserved in a query param
-            var newUrl = (base || '') + '/?p=' + encodeURIComponent(pathWithinApp + l.search + l.hash);
-            l.replace(newUrl);
+            // Relative redirect works for both user pages (/) and project pages (/<repo>/)
+            var target = './?p=' + encodeURIComponent(l.pathname + l.search + l.hash);
+            l.replace(target);
         })();
     </script>
     <style>
